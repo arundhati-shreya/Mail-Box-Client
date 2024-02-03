@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
-
+    const navigate = useNavigate()
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -60,7 +61,9 @@ const SignUp = () => {
                     confirmPassword: '',
                 });
 
-                if (!isLogin) {
+                if (isLogin) {
+                    navigate('/mail')
+                }else{
                     setIsLogin(true);
                 }
             }

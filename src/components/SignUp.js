@@ -62,7 +62,8 @@ const SignUp = () => {
                 });
 
                 if (isLogin) {
-                    navigate('/mail')
+                    // navigate('/mail')
+                    navigate('/inbox')
                 }else{
                     setIsLogin(true);
                 }

@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { Editor } from 'react-draft-wysiwyg';
 import { EditorState, convertToRaw } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import { useDispatch } from 'react-redux';
+import { postMailArrayToFirebase, setMail } from '../store/MailSlice';
+
 
 function MailForm() {
+
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('');
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
+  const dispatch = useDispatch();
 
   const handleSend = () => {
     const contentState = convertToRaw(editorState.getCurrentContent());
@@ -16,7 +21,9 @@ function MailForm() {
         subject,
         body,
       };
-  
+    dispatch(setMail(emailData));
+    dispatch(postMailArrayToFirebase()); 
+    
 
       console.log("Sending email:", emailData);
   

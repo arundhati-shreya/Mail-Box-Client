@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import SignUp from './components/SignUp';
 import Mail from './components/Mail';
+import Inbox from './components/Inbox';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<SignUp />} />
           <Route path="/mail" element={<Mail />} />
+          <Route path="/inbox" element={<Inbox />} />
         </Routes>
 
       </Router>

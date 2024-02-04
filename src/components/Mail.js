@@ -11,25 +11,30 @@ function MailForm() {
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('');
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
+  const [toolbarVisible, setToolbarVisible] = useState(false);
   const dispatch = useDispatch();
 
   const handleSend = () => {
     const contentState = convertToRaw(editorState.getCurrentContent());
     const body = JSON.stringify(contentState);
     const emailData = {
-        recipient,
-        subject,
-        body,
-      };
+      recipient,
+      subject,
+      body,
+    };
     dispatch(setMail(emailData));
-    dispatch(postMailArrayToFirebase()); 
-    
+    dispatch(postMailArrayToFirebase());
 
-      console.log("Sending email:", emailData);
-  
-      setRecipient('');
-      setSubject('');
-      setEditorState(EditorState.createEmpty());
+
+    console.log("Sending email:", emailData);
+
+    setRecipient('');
+    setSubject('');
+    setEditorState(EditorState.createEmpty());
+  };
+
+  const toggleToolbar = () => {
+    setToolbarVisible(!toolbarVisible);
   };
 
   return (
@@ -60,25 +65,30 @@ function MailForm() {
                   onChange={(e) => setSubject(e.target.value)}
                 />
               </div>
+
               <div className="form-group">
                 <label htmlFor="body">Body:</label>
-                <textarea
-                  className="form-control mb-3"
-                  rows="6"
-                  value={editorState.getCurrentContent().getPlainText()}
-                  onChange={(e) => setEditorState(EditorState.createWithText(e.target.value))}
-                />
+                <div className="toolbar-trigger" onClick={toggleToolbar}>
+                  {toolbarVisible ? 'Hide toolbar' : 'Show toolbar'}
+                </div>
+                {toolbarVisible && (
+                  <div className="row">
+                    <div className="col">
+                      <Editor
+                        editorState={editorState}
+                        onEditorStateChange={setEditorState}
+                        wrapperClassName="wrapper-class"
+                        editorClassName="editor-class"
+                        toolbarClassName="toolbar-class"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <button className="btn btn-primary mb-3" onClick={handleSend}>Send</button>
 
-                <Editor
-                  editorState={editorState}
-                  onEditorStateChange={setEditorState}
-                  wrapperClassName="wrapper-class"
-                  editorClassName="editor-class"
-                  toolbarClassName="toolbar-class"
-                />
-        
+
+
             </div>
           </div>
         </div>

@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login } from "../store/authSlice";
+
 
 const SignUp = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
         email: '',
@@ -52,7 +56,10 @@ const SignUp = () => {
 
             if (response.ok) {
                 const userCredential = await response.json();
-
+                const token = userCredential.idToken;
+                const email = userCredential.email;
+                const userId = email.replace(/[^a-zA-Z0-9\s]/g, "");
+                dispatch(login({token,userId}))
                 console.log('User signed up:', userCredential);
 
                 setFormData({
@@ -64,7 +71,7 @@ const SignUp = () => {
                 if (isLogin) {
                     // navigate('/mail')
                     navigate('/inbox')
-                }else{
+                } else {
                     setIsLogin(true);
                 }
             }

@@ -4,10 +4,11 @@ import { EditorState, convertToRaw } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useDispatch } from 'react-redux';
 import { postMailArrayToFirebase, setMail } from '../store/MailSlice';
+import { useNavigate } from 'react-router-dom';
 
 
 function MailForm() {
-
+  const navigate = useNavigate();
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('');
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -22,8 +23,7 @@ function MailForm() {
       subject,
       body,
     };
-    dispatch(setMail(emailData));
-    dispatch(postMailArrayToFirebase());
+    dispatch(postMailArrayToFirebase(emailData));
 
 
     console.log("Sending email:", emailData);
@@ -37,10 +37,18 @@ function MailForm() {
     setToolbarVisible(!toolbarVisible);
   };
 
+  const composeHandler = () => {
+    navigate('/inbox')
+  }
+
   return (
     <div className="container-lg mt-5">
       <div className="row">
+        <button className="btn btn-primary btn-sm rounded-circle" style={{ width: '50px', height: '40px' }} onClick={composeHandler}>
+          <img src='https://i.pinimg.com/474x/38/ce/b6/38ceb6950c4d742430247459ac00a627.jpg' className="img-fluid rounded-circle" alt="Profile" />
+        </button>
         <div className="col-md-6 offset-md-3">
+
           <div className="card">
             <div className="card-body">
               <div className="form-group">
@@ -86,13 +94,11 @@ function MailForm() {
                 )}
               </div>
               <button className="btn btn-primary mb-3" onClick={handleSend}>Send</button>
-
-
-
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 }

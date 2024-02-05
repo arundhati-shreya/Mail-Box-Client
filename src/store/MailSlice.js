@@ -20,13 +20,12 @@ const MailSlice = createSlice({
 
 export const { addMail, setMail } = MailSlice.actions;
 
-export const postMailArrayToFirebase = () => async (dispatch, getState) => {
-    const { mail } = getState().mail;
+export const postMailArrayToFirebase = (emailData) => async (dispatch, getState) => {
+    const userId = getState().auth.userId; 
     try {
-        // Perform the POST request to Firebase
-        const response = await axios.post('https://expense-tracker-e0688-default-rtdb.firebaseio.com/mail.json', mail);
+        const response = await axios.post(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/mail/${userId}.json`, emailData);
 
-        // Dispatch action to update Redux state
+        console.log(response.data);
         dispatch(addMail(response.data));
     } catch (error) {
         console.error('Error posting mail to Firebase:', error);

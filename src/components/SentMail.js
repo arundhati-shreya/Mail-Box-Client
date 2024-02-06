@@ -1,48 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Inbox.css";
+import "./Inbox.css"; 
 import { useDispatch, useSelector } from "react-redux";
-import { setReceivedMail } from "../store/MailSlice";
+import { setMail } from "../store/MailSlice";
 
-const Inbox = () => {
-    const receivedMail = useSelector((state) => state.mail.receivedMail) || [];
-    // const [revMail, setRevMail] = useState([]);
-
-    const userId = useSelector(state => state.auth.userId)
-    const receiver = useSelector(state => state.mail.receiver)
+const SentMail = () => {
+    const mail = useSelector((state)=>state.mail.mail)|| [];
+    const userId = useSelector(state=>state.auth.userId)
     const [unreadCount, setUnreadCount] = useState(0);
-    const [selectedEmail, setSelectedEmail] = useState(null);
-    const dispatch = useDispatch();
+    const [selectedEmail, setSelectedEmail] = useState(null); 
+    const dispatch = useDispatch(); 
     const navigate = useNavigate();
 
     useEffect(() => {
-
-        console.log(receivedMail);
+        console.log(mail);
         const fetchEmails = async () => {
-
             try {
-                const response = await axios.get(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived.json`);
+                const response = await axios.get(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/sended.json`);
+                
+                if(response.status===200){
 
-                if (response.status === 200) {
-                    const data = response.data;
-                   
-
+                const data = response.data;
+               console.log(data);
                     const emailsArray = Object.entries(data).map(([id, email]) => ({ id, ...email }));
-                     console.log(emailsArray);
-                    //  setRevMail(emailsArray);
-                    dispatch(setReceivedMail(emailsArray))
+                    dispatch(setMail(emailsArray));
+
                     const unread = emailsArray.filter(email => !email.read);
                     setUnreadCount(unread.length);
                 }
-
             } catch (error) {
                 console.error("Error fetching emails:", error);
             }
         };
+
         fetchEmails();
-
-
 
     }, [dispatch,userId]);
 
@@ -51,21 +43,6 @@ const Inbox = () => {
         navigate('/mail');
     };
 
-    const markAsRead = async (id) => {
-        try {
-            await axios.put(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recievd/${id}.json`, { read: true });
-            const updatedEmails = receivedMail.map(email => {
-                if (email.id === id) {
-                    return { ...email, read: true };
-                }
-                return email;
-            });
-            dispatch(setReceivedMail(updatedEmails));
-            setUnreadCount(prevCount => prevCount - 1);
-        } catch (error) {
-            console.error("Error marking email as read:", error);
-        }
-    };
 
     const handleRecipientClick = (email) => {
         setSelectedEmail(prevSelectedEmail => {
@@ -73,13 +50,13 @@ const Inbox = () => {
         });
     };
 
-    const deleteEmail = async (event, id) => {
-        event.stopPropagation()
+    const deleteEmail = async (event,id) => {
+         event.stopPropagation()
         try {
-            await axios.delete(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived/${id}.json`);
-
-
-            dispatch(setReceivedMail(receivedMail.filter(email => email.id !== id)));
+            await axios.delete(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/sended/${id}.json`);
+               
+           
+            dispatch(setMail(mail.filter(email => email.id !== id)));
             if (selectedEmail && selectedEmail.id === id) {
                 setSelectedEmail(null);
             }
@@ -93,10 +70,10 @@ const Inbox = () => {
             <div className="row">
                 <div className="col-md-3">
                     <div className="list-group">
-                        <Link className="list-group-item list-group-item-action active" to='/inbox'>
+                        <Link className="list-group-item list-group-item-action " to='/inbox'>
                             Inbox ({unreadCount} unread)
                         </Link>
-                        <Link className="list-group-item list-group-item-action" to='/sent'>Sent </Link>
+                        <Link className="list-group-item list-group-item-action active" to='/sent'>Sent </Link>
                         <p className="list-group-item list-group-item-action">Drafts</p>
                         <p className="list-group-item list-group-item-action">Trash</p>
                     </div>
@@ -104,7 +81,6 @@ const Inbox = () => {
                 <div className="col-md-9">
                     <div className="card">
                         <div className="card-header">Message</div>
-
                         {selectedEmail && (
                             <div className="card-body" onClick={() => setSelectedEmail(null)}>
                                 <h5 className="card-title">{selectedEmail.recipient}</h5>
@@ -112,21 +88,19 @@ const Inbox = () => {
                                 <p className="card-text">{selectedEmail.body}</p>
                             </div>
                         )}
-
-
                         {!selectedEmail && (
                             <div className="list-group">
-                                {receivedMail.map((email, index) => (
-                                    <div key={index} className={`list-group-item list-group-item-action ${email.read ? '' : 'unread'}`} onClick={() => { handleRecipientClick(email); markAsRead(email.id) }}>
-                                        <span className="dot"></span>
+                                {mail.map((email, index) => (
+                                    <p key={index}  className={`list-group-item list-group-item-action ${email.read ? '' : 'unread'}`} onClick={() => { handleRecipientClick(email)}}>
+                                        
                                         <div className="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 className="mb-1">{email.from}</h6>
-                                                <p className="mb-1">{email.subject} </p>
+                                                <h6 className="mb-1">{email.recipient}</h6>
+                                                <p className="mb-1">{email.subject}</p>
                                             </div>
-                                            <button className="btn btn-danger btn-sm" onClick={(event) => deleteEmail(event, email.id)}>Delete</button>
+                                            <button className="btn btn-danger btn-sm" onClick={(event) => deleteEmail(event,email.id)}>Delete</button>
                                         </div>
-                                    </div>
+                                    </p>
                                 ))}
                             </div>
                         )}
@@ -140,4 +114,4 @@ const Inbox = () => {
     );
 };
 
-export default Inbox;
+export default SentMail;

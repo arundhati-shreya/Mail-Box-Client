@@ -3,7 +3,7 @@ import { Editor } from 'react-draft-wysiwyg';
 import { EditorState, convertToRaw } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useDispatch } from 'react-redux';
-import { postMailArrayToFirebase, setMail } from '../store/MailSlice';
+import { addMail, postMailArrayToFirebase } from '../store/MailSlice';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -23,7 +23,13 @@ function MailForm() {
       subject,
       body,
     };
-    dispatch(postMailArrayToFirebase(emailData));
+    const receiver = recipient.replace(/[^a-zA-Z0-9\s]/g, "");
+    dispatch(addMail({receiver}))
+    console.log('addMail',addMail);
+    console.log('recipent',recipient);
+    console.log('receiver',receiver);
+    dispatch(postMailArrayToFirebase(emailData,subject,body));
+   
 
 
     console.log("Sending email:", emailData);

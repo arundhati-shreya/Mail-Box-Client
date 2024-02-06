@@ -4,6 +4,7 @@ import './App.css';
 import SignUp from './components/SignUp';
 import Mail from './components/Mail';
 import Inbox from './components/Inbox';
+import SentMail from './components/SentMail';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<SignUp />} />
           <Route path="/mail" element={<Mail />} />
           <Route path="/inbox" element={<Inbox />} />
+          <Route path="/sent" element={<SentMail />} />
         </Routes>
 
       </Router>

@@ -4,47 +4,55 @@ import axios from "axios";
 import "./Inbox.css";
 import { useDispatch, useSelector } from "react-redux";
 import { setReceivedMail } from "../store/MailSlice";
+import { logout } from "../store/authSlice";
+import useFetchEmails from "./Hooks/UserFetch";
 
 const Inbox = () => {
     const receivedMail = useSelector((state) => state.mail.receivedMail) || [];
-    // const [revMail, setRevMail] = useState([]);
 
     const userId = useSelector(state => state.auth.userId)
-    const receiver = useSelector(state => state.mail.receiver)
     const [unreadCount, setUnreadCount] = useState(0);
     const [selectedEmail, setSelectedEmail] = useState(null);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+
+    useFetchEmails(
+        userId,
+        `https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived.json`,
+        setReceivedMail
+    )
+
     useEffect(() => {
+        const unread = receivedMail.filter(email => !email.read);
+        setUnreadCount(unread.length);
+    }, [receivedMail]);
+    // useEffect(() => {
 
-        console.log(receivedMail);
-        const fetchEmails = async () => {
+    //     const fetchEmails = async () => {
 
-            try {
-                const response = await axios.get(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived.json`);
+    //         try {
+    //             const response = await axios.get(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived.json`);
 
-                if (response.status === 200) {
-                    const data = response.data;
+    //             if (response.status === 200) {
+    //                 const data = response.data;
+
+    //                 const emailsArray = Object.entries(data).map(([id, email]) => ({ id, ...email }));
+    //                 // console.log(emailsArray);
                    
+    //                 dispatch(setReceivedMail(emailsArray))
+    //                 const unread = emailsArray.filter(email => !email.read);
+    //                 setUnreadCount(unread.length);
+    //             }
 
-                    const emailsArray = Object.entries(data).map(([id, email]) => ({ id, ...email }));
-                     console.log(emailsArray);
-                    //  setRevMail(emailsArray);
-                    dispatch(setReceivedMail(emailsArray))
-                    const unread = emailsArray.filter(email => !email.read);
-                    setUnreadCount(unread.length);
-                }
+    //         } catch (error) {
+    //             console.error("Error fetching emails:", error);
+    //         }
+    //     };
+    //     const intervalId = setInterval(fetchEmails, 2000); 
 
-            } catch (error) {
-                console.error("Error fetching emails:", error);
-            }
-        };
-        fetchEmails();
-
-
-
-    }, [dispatch,userId]);
+    //     return () => clearInterval(intervalId); 
+    // }, [dispatch, userId]);
 
 
     const composeHandler = () => {
@@ -53,7 +61,7 @@ const Inbox = () => {
 
     const markAsRead = async (id) => {
         try {
-            await axios.put(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recievd/${id}.json`, { read: true });
+            await axios.patch(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived/${id}.json`, { read: true });
             const updatedEmails = receivedMail.map(email => {
                 if (email.id === id) {
                     return { ...email, read: true };
@@ -61,7 +69,8 @@ const Inbox = () => {
                 return email;
             });
             dispatch(setReceivedMail(updatedEmails));
-            setUnreadCount(prevCount => prevCount - 1);
+            setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+
         } catch (error) {
             console.error("Error marking email as read:", error);
         }
@@ -88,8 +97,14 @@ const Inbox = () => {
         }
     };
 
+    const LogOutHandler = () => {
+        dispatch(logout());
+        navigate('/')
+    }
+
     return (
         <div className="container mt-4">
+
             <div className="row">
                 <div className="col-md-3">
                     <div className="list-group">
@@ -136,6 +151,12 @@ const Inbox = () => {
             <button className="btn btn-primary btn-sm rounded-circle" style={{ width: '50px', height: '40px' }} onClick={composeHandler}>
                 <img src='https://i.pinimg.com/736x/f4/b9/3a/f4b93a502f60397fe92b663ddb9e683d.jpg' className="img-fluid rounded-circle" alt="Profile" />
             </button>
+
+            <div className="fixed-top p-3 d-flex justify-content-end">
+                <button className="btn btn-primary btn-sm rounded-circle" style={{ width: '50px', height: '50px' }} onClick={LogOutHandler}>
+                    <img src='https://cdn.vectorstock.com/i/1000x1000/23/83/logout-icon-vector-22882383.webp' className="img-fluid rounded-circle" alt="Profile" />
+                </button>
+            </div>
         </div>
     );
 };

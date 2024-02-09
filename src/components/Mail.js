@@ -3,9 +3,9 @@ import { Editor } from 'react-draft-wysiwyg';
 import { EditorState, convertToRaw } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useDispatch } from 'react-redux';
-import { addMail, postMailArrayToFirebase } from '../store/MailSlice';
+import { addMail, postMailArrayToFirebase } from '../stores/MailSlice';
 import { useNavigate } from 'react-router-dom';
-import { logout } from '../store/authSlice';
+import { logout } from '../stores/authSlice';
 
 
 function MailForm() {
@@ -13,10 +13,15 @@ function MailForm() {
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('');
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [toolbarVisible, setToolbarVisible] = useState(false);
   const dispatch = useDispatch();
 
   const handleSend = () => {
+
+    if (!recipient || !subject || !editorState.getCurrentContent().hasText()) {
+      // If any of the fields are empty, return without submitting
+      return;
+    }
+
     const contentState = convertToRaw(editorState.getCurrentContent());
     const body = JSON.stringify(contentState);
     const emailData = {
@@ -40,9 +45,7 @@ function MailForm() {
     setEditorState(EditorState.createEmpty());
   };
 
-  const toggleToolbar = () => {
-    setToolbarVisible(!toolbarVisible);
-  };
+
 
   const composeHandler = () => {
     navigate('/inbox')
@@ -57,9 +60,7 @@ function MailForm() {
   return (
     <div className="container-lg mt-5">
       <div className="row">
-
         <div className="col-md-6 offset-md-3">
-
           <div className="card">
             <div className="card-body">
               <div className="form-group">
@@ -87,45 +88,36 @@ function MailForm() {
 
               <div className="form-group">
                 <label htmlFor="body">Body:</label>
-                <div className="toolbar-trigger" onClick={toggleToolbar}>
-                  {toolbarVisible ? 'Hide toolbar' : 'Show toolbar'}
-                </div>
-                {toolbarVisible && (
-                  <div className="row">
-                    <div className="col">
-                      <Editor
-                       toolbar={{
-                        options: ["textAlign", "link", "embedded", "image"],
-                
+                <div className="row">
+                  <div className="col">
+                    <Editor
+                      toolbar={{
+                        options: ['inline', 'blockType', 'fontSize', 'fontFamily', 'list', 'textAlign', 'colorPicker', 'link', 'embedded', 'emoji', 'image', 'remove'],
                         inline: { inDropdown: true },
-                        blockType: {
-                          inDropdown: true,
-                        },
+                        blockType: { inDropdown: true },
                         list: { inDropdown: true },
                         textAlign: { inDropdown: true },
                         link: { inDropdown: false },
+
                       }}
-                        editorState={editorState}
-                        onEditorStateChange={setEditorState}
-                        wrapperClassName="wrapper-class"
-                        editorClassName="editor-class"
-                        toolbarClassName="toolbar-class"
-                      />
-                    </div>
+                      editorState={editorState}
+                      onEditorStateChange={setEditorState}
+                      wrapperClassName="wrapper-class"
+                      editorClassName="editor-class"
+                      toolbarClassName="toolbar-class"
+                      editorStyle={{ minHeight: '200px' }}
+                      placeholder="Write your message here..."
+                    />
                   </div>
-                )}
+                </div>
               </div>
               <button className="btn btn-primary mb-3" onClick={handleSend}>Send</button>
-              
               <div className="d-flex justify-content-end mt-1">
-              <button className="btn btn-primary btn-sm rounded-circle" style={{ width: '50px', height: '40px' }} onClick={composeHandler}>
-                <img src='https://www.shutterstock.com/shutterstock/photos/1130581295/display_1500/stock-vector-inbox-icon-vector-illustration-flat-design-style-vector-inbox-icon-illustration-isolated-on-white-1130581295.jpg' className="img-fluid rounded-circle" alt="Profile" />
-              </button>
+                <button className="btn btn-primary btn-sm rounded-circle" style={{ width: '50px', height: '40px' }} onClick={composeHandler}>
+                  <img src='https://www.shutterstock.com/shutterstock/photos/1130581295/display_1500/stock-vector-inbox-icon-vector-illustration-flat-design-style-vector-inbox-icon-illustration-isolated-on-white-1130581295.jpg' className="img-fluid rounded-circle" alt="Profile" />
+                </button>
+              </div>
             </div>
-            </div>
-            
-
-
             <div className="fixed-top p-3 d-flex justify-content-end">
               <button className="btn btn-primary btn-sm rounded-circle" style={{ width: '50px', height: '50px' }} onClick={LogOutHandler}>
                 <img src='https://cdn.vectorstock.com/i/1000x1000/23/83/logout-icon-vector-22882383.webp' className="img-fluid rounded-circle" alt="Profile" />
@@ -134,9 +126,10 @@ function MailForm() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }
 
+
 export default MailForm;
+

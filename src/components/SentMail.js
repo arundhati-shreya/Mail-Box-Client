@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Inbox.css"; 
+import "./Inbox.css";
 import { useDispatch, useSelector } from "react-redux";
-import { setMail } from "../store/MailSlice";
-import useFetchEmails from "./Hooks/UserFetch";
+import { setMail } from "../stores/MailSlice";
+import useFetchEmails from "../Hooks/Use-Fetch-Emails";
+import { Editor,convertFromRaw, EditorState } from "draft-js";
 
 const SentMail = () => {
-    const mail = useSelector((state)=>state.mail.mail)|| [];
-    const userId = useSelector(state=>state.auth.userId)
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [selectedEmail, setSelectedEmail] = useState(null); 
-    const dispatch = useDispatch(); 
+    const mail = useSelector((state) => state.mail.mail) || [];
+    const userId = useSelector(state => state.auth.userId)
+    const [selectedEmail, setSelectedEmail] = useState(null);
+    const [editorState, setEditorState] = useState(EditorState.createEmpty()); 
+    const dispatch = useDispatch();
     const navigate = useNavigate();
-
 
     useFetchEmails(
         userId,
@@ -21,52 +21,60 @@ const SentMail = () => {
         setMail
     );
 
+     // useEffect(() => {
 
-    // useEffect(() => {
     //     const fetchEmails = async () => {
-    //         try {
-    //             const response = await axios.get(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/sended.json`);
-                
-    //             if(response.status===200){
-    //                 const data= response.data;
-    //                 if(data){
-    //             const data = response.data;
-    //                 const emailsArray = Object.entries(data).map(([id, email]) => ({ id, ...email }));
-    //                 dispatch(setMail(emailsArray));
 
+    //         try {
+    //             const response = await axios.get(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived.json`);
+
+    //             if (response.status === 200) {
+    //                 const data = response.data;
+
+    //                 const emailsArray = Object.entries(data).map(([id, email]) => ({ id, ...email }));
+    //                 // console.log(emailsArray);
+                   
+    //                 dispatch(setReceivedMail(emailsArray))
+    //                 const unread = emailsArray.filter(email => !email.read);
+    //                 setUnreadCount(unread.length);
     //             }
-    //         }
 
     //         } catch (error) {
     //             console.error("Error fetching emails:", error);
     //         }
     //     };
+    //     const intervalId = setInterval(fetchEmails, 2000); 
 
-    //     fetchEmails();
-
-    // }, [dispatch,userId]);
+    //     return () => clearInterval(intervalId); 
+    // }, [dispatch, userId]);
 
 
     const composeHandler = () => {
         navigate('/mail');
     };
 
-
     const handleRecipientClick = (email) => {
         setSelectedEmail(prevSelectedEmail => {
             return prevSelectedEmail === email ? null : email;
         });
+        if (email && email.body) {
+            const content = JSON.parse(email.body); 
+            const contentState = convertFromRaw(content); 
+            const editorState = EditorState.createWithContent(contentState); 
+            setEditorState(editorState); 
+        } else {
+            setEditorState(EditorState.createEmpty()); 
+        }
     };
 
-    const deleteEmail = async (event,id) => {
-         event.stopPropagation()
+    const deleteEmail = async (event, id) => {
+        event.stopPropagation()
         try {
             await axios.delete(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/sended/${id}.json`);
-               
-           
             dispatch(setMail(mail.filter(email => email.id !== id)));
             if (selectedEmail && selectedEmail.id === id) {
                 setSelectedEmail(null);
+                setEditorState(EditorState.createEmpty()); 
             }
         } catch (error) {
             console.error("Error deleting email:", error);
@@ -79,7 +87,7 @@ const SentMail = () => {
                 <div className="col-md-3">
                     <div className="list-group">
                         <Link className="list-group-item list-group-item-action " to='/inbox'>
-                            Inbox ({unreadCount} unread)
+                            Inbox
                         </Link>
                         <Link className="list-group-item list-group-item-action active" to='/sent'>Sent </Link>
                         <p className="list-group-item list-group-item-action">Drafts</p>
@@ -93,22 +101,23 @@ const SentMail = () => {
                             <div className="card-body" onClick={() => setSelectedEmail(null)}>
                                 <h5 className="card-title">{selectedEmail.recipient}</h5>
                                 <p className="mb-1">{selectedEmail.subject}</p>
-                                <p className="card-text">{selectedEmail.body}</p>
+                                <div className="editor-container">
+                                    <Editor editorState={editorState} readOnly={true} />
+                                </div>
                             </div>
                         )}
                         {!selectedEmail && (
                             <div className="list-group">
                                 {mail.map((email, index) => (
-                                    <p key={index}  className={`list-group-item list-group-item-action ${email.read ? '' : 'unread'}`} onClick={() => { handleRecipientClick(email)}}>
-                                        
+                                    <div key={index} className={`list-group-item list-group-item-action ${email.read ? '' : 'unread'}`} onClick={() => { handleRecipientClick(email) }}>
                                         <div className="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <h6 className="mb-1">{email.recipient}</h6>
                                                 <p className="mb-1">{email.subject}</p>
                                             </div>
-                                            <button className="btn btn-danger btn-sm" onClick={(event) => deleteEmail(event,email.id)}>Delete</button>
+                                            <button className="btn btn-danger btn-sm" onClick={(event) => deleteEmail(event, email.id)}>Delete</button>
                                         </div>
-                                    </p>
+                                    </div>
                                 ))}
                             </div>
                         )}

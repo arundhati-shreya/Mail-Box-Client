@@ -39,16 +39,14 @@ export const postMailArrayToFirebase = (emailData,subject,body) => async (dispat
         console.log(response.data);
         console.log(response.data.name);
         const senderKey = response.data.name
-        dispatch(addMail(response.data));
-
-
+    
         const responsePut = await axios.put(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${receiver}/mails/recived/${senderKey}.json`,{
             subject:subject,
             body:body,
             from:userId
         })
-        dispatch(addReceivedMail(responsePut.data));
         console.log(responsePut.data);
+       
     }
     
     

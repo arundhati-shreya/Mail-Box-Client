@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { setReceivedMail } from "../../store/MailSlice";
 
-const useFetchEmails = (userId, url, actionCreator) => {
+const UseFetchEmails = (userId, url, actionCreator) => {
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -25,10 +24,11 @@ const useFetchEmails = (userId, url, actionCreator) => {
         };
 
         fetchEmails();
-        const intervalId = setInterval(fetchEmails, 2000);
 
+        const intervalId = setInterval(fetchEmails, 2000);
         return () => clearInterval(intervalId);
+
     }, [dispatch, userId, url, actionCreator]);
 };
 
-export default useFetchEmails;
+export default UseFetchEmails;

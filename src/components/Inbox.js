@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Inbox.css";
 import { useDispatch, useSelector } from "react-redux";
-import { setReceivedMail } from "../store/MailSlice";
-import { logout } from "../store/authSlice";
-import useFetchEmails from "./Hooks/UserFetch";
+import { setReceivedMail } from "../stores/MailSlice";
+import { logout } from "../stores/authSlice";
+import useFetchEmails from "../Hooks/Use-Fetch-Emails";
+import { Editor,convertFromRaw, EditorState } from "draft-js";
 
 const Inbox = () => {
     const receivedMail = useSelector((state) => state.mail.receivedMail) || [];
@@ -13,6 +14,7 @@ const Inbox = () => {
     const userId = useSelector(state => state.auth.userId)
     const [unreadCount, setUnreadCount] = useState(0);
     const [selectedEmail, setSelectedEmail] = useState(null);
+    const [editorState, setEditorState] = useState(EditorState.createEmpty()); 
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -21,16 +23,18 @@ const Inbox = () => {
         userId,
         `https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived.json`,
         setReceivedMail
+       
     )
 
     useEffect(() => {
         const unread = receivedMail.filter(email => !email.read);
         setUnreadCount(unread.length);
+      
     }, [receivedMail]);
+
+
     // useEffect(() => {
-
     //     const fetchEmails = async () => {
-
     //         try {
     //             const response = await axios.get(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived.json`);
 
@@ -80,6 +84,15 @@ const Inbox = () => {
         setSelectedEmail(prevSelectedEmail => {
             return prevSelectedEmail === email ? null : email;
         });
+        if (email && email.body) {
+            const content = JSON.parse(email.body); 
+            const contentState = convertFromRaw(content); 
+            const editorState = EditorState.createWithContent(contentState); 
+            setEditorState(editorState); 
+        } else {
+            setEditorState(EditorState.createEmpty()); 
+        }
+
     };
 
     const deleteEmail = async (event, id) => {
@@ -87,8 +100,8 @@ const Inbox = () => {
         try {
             await axios.delete(`https://expense-tracker-e0688-default-rtdb.firebaseio.com/user/${userId}/mails/recived/${id}.json`);
 
-
             dispatch(setReceivedMail(receivedMail.filter(email => email.id !== id)));
+            
             if (selectedEmail && selectedEmail.id === id) {
                 setSelectedEmail(null);
             }
@@ -124,7 +137,9 @@ const Inbox = () => {
                             <div className="card-body" onClick={() => setSelectedEmail(null)}>
                                 <h5 className="card-title">{selectedEmail.recipient}</h5>
                                 <p className="mb-1">{selectedEmail.subject}</p>
-                                <p className="card-text">{selectedEmail.body}</p>
+                                <div className="editor-container">
+                                    <Editor editorState={editorState} readOnly={true} />
+                                </div>
                             </div>
                         )}
 

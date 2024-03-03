@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 
-const UseFetchEmails = (userId, url, actionCreator) => {
+const UseFetchEmail = (userId, url, actionCreator) => {
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -31,4 +31,4 @@ const UseFetchEmails = (userId, url, actionCreator) => {
     }, [dispatch, userId, url, actionCreator]);
 };
 
-export default UseFetchEmails;
+export default UseFetchEmail;
